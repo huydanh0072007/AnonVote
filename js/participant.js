@@ -21,15 +21,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentServerPin = '';
     let pinType = 'number';
 
-    // 1. Fetch Room Info (Try Short ID first, then UUID)
-    let { data: room, error } = await supabase
+    // 1. Fetch Room Info (Smart lookup)
+    let room = null;
+    let roomError = null;
+
+    // Try searching by short_id first (most common for participants)
+    const { data: byShortId, error: errorShort } = await supabase
         .from('rooms')
         .select('*')
-        .or(`short_id.eq.${roomId},id.eq.${roomId}`)
-        .single();
+        .eq('short_id', roomId)
+        .maybeSingle();
 
-    if (error || !room) {
-        // Retry with just ID if short_id check failed or vice versa
+    if (byShortId) {
+        room = byShortId;
+    } else {
+        // If not found by short_id, try by UUID if it looks like one
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(roomId);
+        if (isUUID) {
+            const { data: byId, error: errorId } = await supabase
+                .from('rooms')
+                .select('*')
+                .eq('id', roomId)
+                .maybeSingle();
+            room = byId;
+            roomError = errorId;
+        }
+    }
+
+    if (!room) {
         alert('Phòng không tồn tại hoặc mã không đúng!');
         window.location.href = 'index.html';
         return;
