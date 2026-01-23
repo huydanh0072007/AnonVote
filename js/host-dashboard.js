@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnShare.addEventListener('click', () => {
             const joinLink = `${window.location.origin}/participant.html?id=${roomId}`;
             shareLinkInput.value = joinLink;
-            qrCode.src = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(joinLink)}`;
+            qrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(joinLink)}`;
             modalShare.classList.remove('hidden');
         });
     }
