@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const splashRoomId = urlParams.get('id');
 
     if (splashRoomId) {
+        // Use global supabase from supabase-config.js
         const { data: room } = await supabase.from('rooms').select('bg_url').eq('id', splashRoomId).single();
         if (room && room.bg_url) {
             document.body.style.backgroundImage = `url('${room.bg_url}')`;
@@ -52,6 +53,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     roomName: newRoom.name
                 };
                 localStorage.setItem(`host_${newRoom.id}`, JSON.stringify(hostData));
+
+                // Clear temporary background if any
+                document.body.style.backgroundImage = '';
 
                 // Redirect to Host Dashboard
                 window.location.href = `host-dashboard.html?id=${newRoom.id}&key=${hostKey}`;
