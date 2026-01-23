@@ -189,19 +189,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (tabPolls && tabQA) {
         tabPolls.addEventListener('click', () => {
-            tabPolls.classList.add('bg-primary');
-            tabPolls.classList.remove('bg-white/5', 'text-gray-400');
-            tabQA.classList.add('bg-white/5', 'text-gray-400');
-            tabQA.classList.remove('bg-primary');
+            tabPolls.classList.add('border-primary', 'text-white', 'bg-white/5');
+            tabPolls.classList.remove('border-transparent', 'text-gray-500');
+            tabQA.classList.remove('border-primary', 'text-white', 'bg-white/5');
+            tabQA.classList.add('border-transparent', 'text-gray-500');
             pollTab.classList.remove('hidden');
             qaTab.classList.add('hidden');
         });
 
         tabQA.addEventListener('click', () => {
-            tabQA.classList.add('bg-primary');
-            tabQA.classList.remove('bg-white/5', 'text-gray-400');
-            tabPolls.classList.add('bg-white/5', 'text-gray-400');
-            tabPolls.classList.remove('bg-primary');
+            tabQA.classList.add('border-primary', 'text-white', 'bg-white/5');
+            tabQA.classList.remove('border-transparent', 'text-gray-500');
+            tabPolls.classList.remove('border-primary', 'text-white', 'bg-white/5');
+            tabPolls.classList.add('border-transparent', 'text-gray-500');
             qaTab.classList.remove('hidden');
             pollTab.classList.add('hidden');
             loadQA();
@@ -238,11 +238,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function loadQA() {
+        // Only show non-hidden questions
         const { data: qs } = await supabase
             .from('questions')
             .select('*')
             .eq('room_id', roomId)
             .eq('is_toxic', false)
+            .eq('is_hidden', false)
             .order('upvotes', { ascending: false });
 
         if (!qaList) return;
@@ -253,13 +255,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         qaList.innerHTML = qs.map(q => `
-            <div class="bg-white/5 border border-white/5 p-4 rounded-xl flex items-start gap-3 mb-2">
+            <div class="bg-white/5 border border-white/5 p-4 rounded-xl flex items-start gap-3 mb-2 ${q.is_answered ? 'opacity-70 bg-green-500/5 border-green-500/10' : ''}">
                 <div class="flex-1">
-                    <p class="text-sm text-white">${q.content}</p>
+                    ${q.is_answered ? '<span class="text-[8px] bg-green-500 text-white px-1.5 py-0.5 rounded-full uppercase font-bold mr-2 mb-1 inline-block">Đã trả lời</span>' : ''}
+                    <p class="text-sm ${q.is_answered ? 'text-gray-300' : 'text-white'}">${q.content}</p>
                 </div>
                 <button onclick="upvoteQA('${q.id}', ${q.upvotes})" class="flex flex-col items-center gap-1 group">
-                    <i data-lucide="chevron-up" class="${localStorage.getItem(`upvoted_${q.id}`) ? 'text-primary' : 'text-gray-500 group-hover:text-primary'} transition-all"></i>
-                    <span class="text-xs ${localStorage.getItem(`upvoted_${q.id}`) ? 'text-primary font-bold' : 'text-gray-500'}">${q.upvotes}</span>
+                    <i data-lucide="heart" size="14" class="${localStorage.getItem(`upvoted_${q.id}`) ? 'text-red-500 fill-red-500' : 'text-gray-500 group-hover:text-red-400'} transition-all"></i>
+                    <span class="text-[10px] ${localStorage.getItem(`upvoted_${q.id}`) ? 'text-red-400 font-bold' : 'text-gray-500'}">${q.upvotes}</span>
                 </button>
             </div>
         `).join('');

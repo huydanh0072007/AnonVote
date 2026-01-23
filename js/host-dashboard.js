@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     roomTitle.innerText = room.name;
+    document.getElementById('displayRoomId').innerText = roomId;
 
     // 2. PIN Rotation Logic
     let currentPin = '';
@@ -145,6 +146,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderPolls(polls) {
+        // Calculate total votes across all polls
+        const totalVotesAll = polls.reduce((sum, p) => sum + (p.votes ? p.votes.length : 0), 0);
+        statVoted.innerText = totalVotesAll;
+
         if (polls.length === 0) {
             pollList.innerHTML = '<div class="text-center text-gray-500 py-10">Chưa có cuộc bình chọn nào.</div>';
             return;
@@ -196,7 +201,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.togglePoll = async (id, currentStatus) => {
         const nextStatus = currentStatus === 'active' ? 'closed' : 'active';
-        await supabase.from('polls').update({ status: nextStatus }).eq('id', id);
+        const { error } = await supabase.from('polls').update({ status: nextStatus }).eq('id', id);
+        if (error) alert('Lỗi: ' + error.message);
         loadPolls();
     }
 
@@ -224,9 +230,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         latestQuestions.innerHTML = questions.map(q => `
-            <div class="bg-white/5 border border-white/5 p-3 rounded-xl mb-3 ${q.is_toxic ? 'border-red-500/30 bg-red-500/5' : ''}">
+            <div class="bg-white/5 border border-white/5 p-3 rounded-xl mb-3 ${q.is_toxic ? 'border-red-500/30 bg-red-500/5' : ''} ${q.is_hidden ? 'opacity-40 grayscale' : ''} ${q.is_answered ? 'border-green-500/30 bg-green-500/5' : ''}">
                 <div class="flex justify-between items-start gap-2">
-                    <p class="text-sm ${q.is_toxic ? 'text-red-300 italic' : 'text-gray-200'}">${q.content}</p>
+                    <div class="flex-1">
+                        ${q.is_answered ? '<span class="text-[8px] bg-green-500 text-white px-1.5 py-0.5 rounded-full uppercase font-bold mr-2 mb-1 inline-block">Đã trả lời</span>' : ''}
+                        <p class="text-sm ${q.is_toxic ? 'text-red-300 italic' : 'text-gray-200'}">${q.content}</p>
+                    </div>
                     <div class="flex flex-col items-center min-w-[30px]">
                         <i data-lucide="heart" size="12" class="text-primary" fill="currentColor"></i>
                         <span class="text-xs font-bold text-primary">${q.upvotes}</span>
@@ -234,14 +243,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
                 <div class="mt-2 flex justify-between items-center">
                     <span class="text-[9px] text-gray-500">${new Date(q.created_at).toLocaleTimeString()}</span>
-                    ${q.is_toxic ? `
-                        <button onclick="approveQA('${q.id}')" class="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded border border-green-500/20">Duyệt</button>
-                    ` : ''}
+                    <div class="flex gap-2">
+                        ${q.is_toxic ? `
+                            <button onclick="approveQA('${q.id}')" class="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded border border-green-500/20 hover:bg-green-500/30">Duyệt</button>
+                        ` : ''}
+                        <button onclick="markAsAnswered('${q.id}', ${q.is_answered})" class="text-[9px] ${q.is_answered ? 'bg-gray-500/20 text-gray-400' : 'bg-primary/20 text-primary'} px-2 py-0.5 rounded border border-white/10 hover:bg-white/10">
+                            ${q.is_answered ? 'Bỏ đánh dấu' : 'Đã trả lời'}
+                        </button>
+                        <button onclick="toggleHideQA('${q.id}', ${q.is_hidden})" class="text-[9px] ${q.is_hidden ? 'bg-orange-500/20 text-orange-400' : 'bg-red-500/20 text-red-400'} px-2 py-0.5 rounded border border-white/10 hover:bg-white/10">
+                            ${q.is_hidden ? 'Hiện lại' : 'Ẩn ý kiến'}
+                        </button>
+                    </div>
                 </div>
             </div>
         `).join('');
         lucide.createIcons();
     }
+
+    window.markAsAnswered = async (id, current) => {
+        await supabase.from('questions').update({ is_answered: !current }).eq('id', id);
+        loadQA();
+    };
+
+    window.toggleHideQA = async (id, current) => {
+        await supabase.from('questions').update({ is_hidden: !current }).eq('id', id);
+        loadQA();
+    };
 
     window.approveQA = async (id) => {
         await supabase.from('questions').update({ is_toxic: false }).eq('id', id);
