@@ -1,10 +1,12 @@
 // Supabase Configuration
-// Bạn cần thay thế SUPABASE_URL và SUPABASE_ANON_KEY bằng thông tin từ project Supabase của bạn.
+(function () {
+    var URL = 'https://pugtndruuelblwvpqdog.supabase.co';
+    var KEY = 'sb_publishable_T1Mn2K9xBnOZUGrj4PbuhQ_mggaPTH2';
 
-const SUPABASE_URL = 'https://pugtndruuelblwvpqdog.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_T1Mn2K9xBnOZUGrj4PbuhQ_mggaPTH2';
+    if (!window.sb) {
+        window.sb = window.supabase.createClient(URL, KEY);
+    }
+})();
 
-window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const supabase = window.supabaseClient;
-
-console.log('Supabase initialized:', supabase);
+// Alias for backwards compatibility if needed, using 'var' to prevent redeclaration errors
+var supabase = window.sb;
