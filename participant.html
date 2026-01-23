@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tham gia cuộc họp - AnonVote</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#a855f7',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+    <div id="app" class="max-w-md w-full relative z-10">
+        <!-- Step 1: PIN Entry -->
+        <div id="pinScreen" class="glass-card p-8 text-center">
+            <h1 id="roomNameDisplay" class="text-2xl font-bold mb-2">Đang tải...</h1>
+            <p class="text-gray-400 text-sm mb-8 italic">Nhập mã PIN hiển thị trên màn hình host để tham gia</p>
+
+            <div id="pinInputContainer" class="flex flex-col gap-6">
+                <!-- PIN Type: Number vs Icon will be handled by JS -->
+                <div id="pinNumbers" class="hidden">
+                    <input type="text" maxlength="4" id="pinInput" placeholder="0000"
+                        class="w-full bg-gray-800/50 border border-gray-700 p-4 rounded-xl text-center text-3xl font-mono tracking-[1rem] focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+
+                <div id="pinIcons" class="hidden">
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <button data-icon="🍎"
+                            class="icon-btn text-2xl p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10">🍎</button>
+                        <button data-icon="⭐"
+                            class="icon-btn text-2xl p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10">⭐</button>
+                        <button data-icon="🚀"
+                            class="icon-btn text-2xl p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10">🚀</button>
+                        <button data-icon="💎"
+                            class="icon-btn text-2xl p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10">💎</button>
+                        <button data-icon="🍀"
+                            class="icon-btn text-2xl p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10">🍀</button>
+                        <button data-icon="🔥"
+                            class="icon-btn text-2xl p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10">🔥</button>
+                        <button data-icon="🌈"
+                            class="icon-btn text-2xl p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10">🌈</button>
+                        <button data-icon="🎁"
+                            class="icon-btn text-2xl p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10">🎁</button>
+                    </div>
+                    <div id="selectedIcons"
+                        class="h-12 bg-gray-800/50 rounded-xl flex items-center justify-center gap-4 text-2xl">
+                        <!-- Selected icons will appear here -->
+                    </div>
+                </div>
+
+                <p id="pinError" class="text-red-400 text-sm hidden">Mã PIN không đúng hoặc đã hết hạn!</p>
+
+                <button id="btnVerifyPin"
+                    class="bg-primary hover:bg-primary/80 text-white py-3 rounded-xl font-semibold transition-all shadow-lg">
+                    Xác nhận mã bảo vệ
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Waiting Room / Content Screen -->
+        <div id="mainContent" class="hidden glass-card p-6 min-h-[400px] flex flex-col">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+                <span class="text-xs font-semibold uppercase text-gray-400" id="currentRoomLabel">Phòng họp</span>
+                <span class="flex items-center gap-1 text-green-400 text-[10px] animate-pulse">
+                    <i data-lucide="circle" size="8" fill="currentColor"></i> Đã kết nối
+                </span>
+            </div>
+
+            <!-- Content Area -->
+            <div id="tabContent" class="flex-1 overflow-y-auto">
+                <!-- Polls Tab -->
+                <div id="pollTab" class="flex flex-col items-center justify-center text-center py-10">
+                    <div id="pollDisplay" class="w-full">
+                        <i data-lucide="clock" size="48" class="text-gray-600 mb-4 mx-auto"></i>
+                        <h2 class="text-xl font-semibold">Đang đợi Host bắt đầu...</h2>
+                        <p class="text-sm text-gray-500 mt-2">Cuộc bình chọn sẽ tự động hiện ra tại đây.</p>
+                    </div>
+                </div>
+
+                <!-- Q&A Tab -->
+                <div id="qaTab" class="hidden flex flex-col gap-4 py-4">
+                    <div class="flex flex-col gap-2">
+                        <textarea id="qaInput" placeholder="Nhập câu hỏi hoặc ý kiến của bạn..."
+                            class="w-full bg-gray-800/50 border border-gray-700 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary h-24 text-sm"></textarea>
+                        <button id="btnSendQA"
+                            class="bg-primary hover:bg-primary/80 py-2 rounded-lg text-sm font-semibold transition-all">
+                            Gửi ý kiến ẩn danh
+                        </button>
+                    </div>
+                    <div id="qaList" class="flex flex-col gap-3 mt-4">
+                        <!-- Questions will go here -->
+                        <div class="text-center text-gray-600 text-xs py-10">Chưa có câu hỏi nào. Hãy là người đầu tiên!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Switcher -->
+            <div class="mt-6 flex gap-2 pt-4 border-t border-white/5">
+                <button id="tabPolls"
+                    class="tab-btn flex-1 py-2 bg-primary rounded-lg text-sm font-medium transition-all">Polls</button>
+                <button id="tabQA"
+                    class="tab-btn flex-1 py-2 bg-white/5 rounded-lg text-sm font-medium text-gray-400 hover:bg-white/10 transition-all">Hỏi
+                    đáp</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Gradients -->
+    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/participant.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bình Chọn & Hỏi Đáp Ẩn Danh - AnonVote</title>
+    <meta name="description"
+        content="Nền tảng bình chọn và đặt câu hỏi ẩn danh thời gian thực cho cuộc họp, sự kiện. Bảo mật bằng mã PIN động, không cần tài khoản.">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Bình Chọn & Hỏi Đáp Ẩn Danh - AnonVote">
+    <meta property="og:description"
+        content="Tham gia bình chọn và đặt câu hỏi ẩn danh ngay lập tức với mã PIN bảo mật.">
+    <meta property="og:image"
+        content="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="Bình Chọn & Hỏi Đáp Ẩn Danh - AnonVote">
+    <meta property="twitter:description"
+        content="Tham gia bình chọn và đặt câu hỏi ẩn danh ngay lập tức với mã PIN bảo mật.">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#a855f7',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen">
+    <div id="app" class="relative overflow-hidden min-h-screen flex flex-col items-center justify-center p-4">
+        <!-- Background Gradients -->
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[120px]">
+        </div>
+
+        <!-- Main Content -->
+        <main class="glass-card max-w-lg w-full p-8 text-center relative z-10">
+            <h1
+                class="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                Hệ thống bình chọn & phát biểu ý kiến ẩn danh
+            </h1>
+            <p class="text-gray-400 mb-8">
+                Hệ thống bỏ phiếu và đặt câu hỏi ẩn danh thời gian thực cho cuộc họp.
+            </p>
+
+            <div class="flex flex-col gap-4">
+                <button id="btnCreateRoom"
+                    class="bg-primary hover:bg-primary/80 text-white py-3 px-6 rounded-xl font-semibold transition-all shadow-lg hover:shadow-primary/20">
+                    Tạo cuộc họp mới
+                </button>
+                <div class="flex items-center gap-4 my-2">
+                    <div class="h-[1px] bg-gray-700 flex-1"></div>
+                    <span class="text-gray-500 text-sm italic">hoặc</span>
+                    <div class="h-[1px] bg-gray-700 flex-1"></div>
+                </div>
+                <input type="text" id="joinCode" placeholder="Nhập mã phòng..."
+                    class="bg-gray-800/50 border border-gray-700 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-center">
+                <button id="btnJoinRoom"
+                    class="bg-white/10 hover:bg-white/20 text-white py-3 px-6 rounded-xl font-semibold transition-all border border-white/10">
+                    Tham gia ngay
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Supabase SDK CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- App Scripts -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
