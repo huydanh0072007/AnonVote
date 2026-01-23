@@ -24,6 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Generate a random HostKey (64 chars) to identify the owner
         const hostKey = generateRandomKey(64);
+        // Generate a simple 6-char Short ID (A-Z, 0-9)
+        const shortId = generateRandomKey(6, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
 
         try {
             const { data, error } = await supabase
@@ -32,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     {
                         name: roomName,
                         host_key: hostKey,
+                        short_id: shortId,
                         settings: {
                             pin_type: "number",
                             pin_interval: 30,
@@ -78,8 +81,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Helper: Generate Random Key
-    function generateRandomKey(length) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    function generateRandomKey(length, customChars) {
+        const chars = customChars || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
         for (let i = 0; i < length; i++) {
             result += chars.charAt(Math.floor(Math.random() * chars.length));

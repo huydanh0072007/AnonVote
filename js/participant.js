@@ -21,18 +21,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentServerPin = '';
     let pinType = 'number';
 
-    // 1. Fetch Room Info (Initial)
-    const { data: room, error } = await supabase
+    // 1. Fetch Room Info (Try Short ID first, then UUID)
+    let { data: room, error } = await supabase
         .from('rooms')
         .select('*')
-        .eq('id', roomId)
+        .or(`short_id.eq.${roomId},id.eq.${roomId}`)
         .single();
 
     if (error || !room) {
-        alert('Phòng không tồn tại!');
+        // Retry with just ID if short_id check failed or vice versa
+        alert('Phòng không tồn tại hoặc mã không đúng!');
         window.location.href = 'index.html';
         return;
     }
+
+    // Critical: Update roomId variable to the actual record UUID for further queries
+    const actualRoomId = room.id;
 
     roomNameDisplay.innerText = room.name;
     currentRoomLabel.innerText = room.name;
@@ -55,8 +59,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 2. Real-time PIN updates
-    supabase.channel(`room_public_${roomId}`)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` }, payload => {
+    supabase.channel(`room_public_${actualRoomId}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${actualRoomId}` }, payload => {
             currentServerPin = payload.new.current_pin;
             console.log('PIN updated on server!');
         })
@@ -90,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (userPin === currentServerPin) {
             // Success! 
-            localStorage.setItem(`voter_auth_${roomId}`, 'true');
+            localStorage.setItem(`voter_auth_${actualRoomId}`, 'true');
             pinScreen.classList.add('hidden');
             mainContent.classList.remove('hidden');
         } else {
@@ -109,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: polls } = await supabase
             .from('polls')
             .select('*')
-            .eq('room_id', roomId)
+            .eq('room_id', actualRoomId)
             .eq('status', 'active')
             .order('created_at', { ascending: false })
             .limit(1);
@@ -223,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const { error } = await supabase
                 .from('questions')
                 .insert([{
-                    room_id: roomId,
+                    room_id: actualRoomId,
                     content: content,
                     is_toxic: TOXIC_WORDS.some(w => content.toLowerCase().includes(w))
                 }]);
@@ -242,7 +246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: qs } = await supabase
             .from('questions')
             .select('*')
-            .eq('room_id', roomId)
+            .eq('room_id', actualRoomId)
             .eq('is_toxic', false)
             .eq('is_hidden', false)
             .order('upvotes', { ascending: false });
@@ -279,14 +283,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Subscribe to changes
-    supabase.channel(`polls_${roomId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `room_id=eq.${roomId}` }, () => {
+    supabase.channel(`polls_${actualRoomId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `room_id=eq.${actualRoomId}` }, () => {
             loadActivePoll();
         })
         .subscribe();
 
-    supabase.channel(`qa_${roomId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: `room_id=eq.${roomId}` }, () => {
+    supabase.channel(`qa_${actualRoomId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: `room_id=eq.${actualRoomId}` }, () => {
             loadQA();
         })
         .subscribe();

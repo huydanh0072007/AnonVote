@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     roomTitle.innerText = room.name;
-    document.getElementById('displayRoomId').innerText = roomId;
+    // Display Short ID if available, fallback to long ID
+    document.getElementById('displayRoomId').innerText = room.short_id || roomId;
+    const activeShortId = room.short_id || roomId;
 
     // 2. PIN Rotation Logic
     let currentPin = '';
@@ -308,7 +310,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (btnShare) {
         btnShare.addEventListener('click', () => {
-            const joinLink = `${window.location.origin}/participant.html?id=${roomId}`;
+            const joinLink = `${window.location.origin}/participant.html?id=${activeShortId}`;
             shareLinkInput.value = joinLink;
             qrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(joinLink)}`;
             modalShare.classList.remove('hidden');
