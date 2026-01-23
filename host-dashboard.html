@@ -26,9 +26,18 @@
     <div class="flex flex-col h-screen">
         <!-- Header -->
         <header class="glass-card m-4 p-4 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <i data-lucide="layout-dashboard" class="text-primary"></i>
-                <h1 id="roomTitle" class="text-xl font-bold">Đang tải...</h1>
+            <div class="flex items-center gap-4">
+                <div
+                    class="h-10 w-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/30">
+                    <i data-lucide="layout-dashboard" class="text-primary"></i>
+                </div>
+                <div>
+                    <h1 id="roomTitle" class="text-xl font-bold tracking-tight">Đang tải...</h1>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                        Mã số: <span id="displayRoomId"
+                            class="text-primary font-mono select-all bg-white/5 px-1.5 py-0.5 rounded cursor-copy">...</span>
+                    </p>
+                </div>
             </div>
             <div class="flex items-center gap-4">
                 <div class="bg-white/5 px-4 py-2 rounded-lg border border-white/5 flex items-center gap-2">
@@ -100,8 +109,10 @@
                         <p class="text-center text-gray-600 text-sm mt-10">Đang chờ câu hỏi...</p>
                     </div>
                 </div>
-            </section>
-        </main>
+    </div>
+    </div>
+    </section>
+    </main>
     </div>
 
     <!-- Poll Creation Modal -->
