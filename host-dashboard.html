@@ -140,6 +140,30 @@
         </div>
     </div>
 
+    <!-- Share Modal -->
+    <div id="modalShare"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="glass-card w-full max-w-sm p-6 text-center animate-in fade-in zoom-in-95">
+            <h2 class="text-xl font-bold mb-4">Mời mọi người tham gia</h2>
+            <div class="bg-white p-4 rounded-2xl mb-6 inline-block">
+                <img id="qrCode" src="" alt="QR Code" class="w-48 h-48">
+            </div>
+            <div class="space-y-4">
+                <div class="bg-white/5 p-3 rounded-xl border border-white/10 flex items-center gap-2">
+                    <input type="text" id="shareLinkInput" readonly
+                        class="bg-transparent border-none text-[10px] text-gray-300 flex-1 outline-none">
+                    <button id="btnCopyLink" class="text-primary hover:text-primary/80 transition-colors">
+                        <i data-lucide="copy" size="18"></i>
+                    </button>
+                </div>
+                <button id="btnCloseShare"
+                    class="w-full bg-primary py-3 rounded-xl font-semibold hover:bg-primary/80 transition-all">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Supabase SDK CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
