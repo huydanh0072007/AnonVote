@@ -272,6 +272,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
     // 5. Action Buttons
+    const btnShare = document.getElementById('btnShare');
+    const modalShare = document.getElementById('modalShare');
+    const qrCode = document.getElementById('qrCode');
+    const shareLinkInput = document.getElementById('shareLinkInput');
+    const btnCloseShare = document.getElementById('btnCloseShare');
+    const btnCopyLink = document.getElementById('btnCopyLink');
+
+    if (btnShare) {
+        btnShare.addEventListener('click', () => {
+            const joinLink = `${window.location.origin}/participant.html?id=${roomId}`;
+            shareLinkInput.value = joinLink;
+            qrCode.src = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(joinLink)}`;
+            modalShare.classList.remove('hidden');
+        });
+    }
+
+    if (btnCloseShare) {
+        btnCloseShare.addEventListener('click', () => {
+            modalShare.classList.add('hidden');
+        });
+    }
+
+    if (btnCopyLink) {
+        btnCopyLink.addEventListener('click', () => {
+            navigator.clipboard.writeText(shareLinkInput.value).then(() => {
+                alert('Đã copy link tham gia!');
+            });
+        });
+    }
 
     // 6. Excel Export Logic
     const btnExportExcel = document.getElementById('btnExportExcel');
