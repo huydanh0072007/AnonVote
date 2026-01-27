@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pinScreen = document.getElementById('pinScreen');
     const mainContent = document.getElementById('mainContent');
     const roomNameDisplay = document.getElementById('roomNameDisplay');
-    const currentRoomLabel = document.getElementById('currentRoomLabel');
+    const roomNameTitle = document.getElementById('roomNameTitle');
     const pinInput = document.getElementById('pinInput');
     const btnVerifyPin = document.getElementById('btnVerifyPin');
     const pinError = document.getElementById('pinError');
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const actualRoomId = room.id;
 
     roomNameDisplay.innerText = room.name;
-    currentRoomLabel.innerText = room.name;
+    if (roomNameTitle) roomNameTitle.innerText = room.name;
     currentServerPin = room.current_pin;
     pinType = room.settings.pin_type || 'number';
 
@@ -291,19 +291,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (tabPolls && tabQA) {
         tabPolls.addEventListener('click', () => {
-            tabPolls.classList.add('border-primary', 'text-white', 'bg-white/5');
-            tabPolls.classList.remove('border-transparent', 'text-gray-500');
-            tabQA.classList.remove('border-primary', 'text-white', 'bg-white/5');
-            tabQA.classList.add('border-transparent', 'text-gray-500');
+            // Update Tab UI
+            tabPolls.classList.add('bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20');
+            tabPolls.classList.remove('text-gray-400', 'hover:text-white', 'hover:bg-white/5');
+
+            tabQA.classList.remove('bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20');
+            tabQA.classList.add('text-gray-400', 'hover:text-white', 'hover:bg-white/5');
+
             pollTab.classList.remove('hidden');
             qaTab.classList.add('hidden');
         });
 
         tabQA.addEventListener('click', () => {
-            tabQA.classList.add('border-primary', 'text-white', 'bg-white/5');
-            tabQA.classList.remove('border-transparent', 'text-gray-500');
-            tabPolls.classList.remove('border-primary', 'text-white', 'bg-white/5');
-            tabPolls.classList.add('border-transparent', 'text-gray-500');
+            // Update Tab UI
+            tabQA.classList.add('bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20');
+            tabQA.classList.remove('text-gray-400', 'hover:text-white', 'hover:bg-white/5');
+
+            tabPolls.classList.remove('bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20');
+            tabPolls.classList.add('text-gray-400', 'hover:text-white', 'hover:bg-white/5');
+
             qaTab.classList.remove('hidden');
             pollTab.classList.add('hidden');
             loadQA();

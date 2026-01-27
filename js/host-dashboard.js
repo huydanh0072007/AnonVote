@@ -11,9 +11,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const roomTitle = document.getElementById('roomTitle');
-    const displayPin = document.getElementById('displayPin');
-    const statOnline = document.getElementById('statOnline');
-    const statVoted = document.getElementById('statVoted');
+    const displayPin = document.getElementById('roomPin');
+    const statOnline = document.getElementById('participantCount');
+    const statVoted = document.getElementById('totalVotesCount');
 
     // 1. Fetch Room Data
     const { data: room, error } = await supabase
@@ -30,8 +30,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     roomTitle.innerText = room.name;
-    // Display Short ID if available, fallback to long ID
-    document.getElementById('displayRoomId').innerText = room.short_id || roomId;
     const activeShortId = room.short_id || roomId;
 
     // 2. PIN Rotation Logic
@@ -576,4 +574,68 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+    // 9. Resizable Panels Logic
+    const resizer = document.getElementById('resizer');
+    const panelLeft = document.getElementById('panelLeft');
+    let isDragging = false;
+
+    if (resizer && panelLeft) {
+        resizer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            resizer.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const containerWidth = document.querySelector('.split-container').offsetWidth;
+            let newWidth = (e.clientX / containerWidth) * 100;
+
+            // Constrain width between 20% and 80%
+            newWidth = Math.max(20, Math.min(80, newWidth));
+            panelLeft.style.width = `${newWidth}%`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            resizer.classList.remove('dragging');
+            document.body.style.cursor = 'default';
+        });
+    }
+
+    // 10. Layout Presets Logic
+    window.setLayoutPreset = (preset) => {
+        const panelLeft = document.getElementById('panelLeft');
+        const panelRight = document.getElementById('panelRight');
+
+        // Update button states
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.classList.remove('bg-primary/20', 'text-primary', 'font-bold');
+            btn.classList.add('bg-white/5', 'text-gray-400');
+        });
+
+        const activeBtn = Array.from(document.querySelectorAll('.preset-btn'))
+            .find(btn => btn.innerText.toLowerCase().includes(preset === 'focus' ? 'tập trung' : preset === 'moderate' ? 'cân bằng' : 'phân tích'));
+
+        if (activeBtn) {
+            activeBtn.classList.remove('bg-white/5', 'text-gray-400');
+            activeBtn.classList.add('bg-primary/20', 'text-primary', 'font-bold');
+        }
+
+        switch (preset) {
+            case 'focus':
+                panelLeft.style.width = '75%';
+                panelRight.style.display = 'block';
+                break;
+            case 'moderate':
+                panelLeft.style.width = '50%';
+                panelRight.style.display = 'block';
+                break;
+            case 'analytic':
+                panelLeft.style.width = '30%';
+                panelRight.style.display = 'block';
+                break;
+        }
+    };
 });
