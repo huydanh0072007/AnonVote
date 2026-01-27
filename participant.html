@@ -70,53 +70,73 @@
             </div>
         </div>
 
-        <!-- Step 2: Waiting Room / Content Screen -->
-        <div id="mainContent" class="hidden glass-card min-h-[500px] flex flex-col p-0 overflow-hidden">
-            <!-- Top Navigation Tabs -->
-            <div class="flex border-b border-white/5 bg-white/5">
+        <!-- Step 2: Content Screen -->
+        <div id="mainContent" class="hidden glass-card min-h-[600px] flex flex-col p-0 overflow-hidden shadow-2xl">
+            <!-- Header Info -->
+            <div class="px-6 py-4 bg-white/3 flex items-center justify-between border-b border-white/5">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <i data-lucide="users" class="text-primary" size="16"></i>
+                    </div>
+                    <div>
+                        <span
+                            class="text-[9px] font-bold uppercase text-gray-400 tracking-wider block leading-tight">Phòng
+                            họp</span>
+                        <h2 id="roomNameTitle" class="text-xs font-bold text-white truncate max-w-[150px]">---</h2>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span
+                        class="flex items-center gap-1.5 text-green-400 text-[9px] font-bold bg-green-500/10 px-2 py-1 rounded-full border border-green-500/20">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span> TRỰC TUYẾN
+                    </span>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex p-2 gap-2 bg-black/20">
                 <button id="tabPolls"
-                    class="tab-btn flex-1 py-4 text-sm font-bold transition-all border-b-2 border-primary text-white bg-white/5">
-                    Bình chọn
+                    class="tab-btn flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-primary text-white shadow-lg shadow-primary/20">
+                    <i data-lucide="vote" size="14"></i> Bình chọn
                 </button>
                 <button id="tabQA"
-                    class="tab-btn flex-1 py-4 text-sm font-bold transition-all border-b-2 border-transparent text-gray-500 hover:text-gray-300">
-                    Hỏi đáp
+                    class="tab-btn flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-white/5">
+                    <i data-lucide="message-circle" size="14"></i> Hỏi đáp
                 </button>
             </div>
 
-            <div class="p-6 flex-1 flex flex-col">
-                <div class="flex items-center justify-between mb-6 pb-2 border-b border-white/5">
-                    <span class="text-[10px] font-bold uppercase text-gray-400 tracking-widest"
-                        id="currentRoomLabel">Phòng họp</span>
-                    <span class="flex items-center gap-1 text-green-400 text-[9px] font-bold animate-pulse">
-                        <i data-lucide="circle" size="6" fill="currentColor"></i> ĐÃ KẾT NỐI
-                    </span>
-                </div>
-
+            <div class="flex-1 flex flex-col overflow-hidden">
                 <!-- Content Area -->
-                <div id="tabContent" class="flex-1 overflow-y-auto">
+                <div id="tabContent" class="flex-1 overflow-y-auto p-6 no-scrollbar">
                     <!-- Polls Tab -->
-                    <div id="pollTab" class="flex flex-col items-center justify-center text-center py-10">
-                        <div id="pollDisplay" class="w-full">
-                            <i data-lucide="clock" size="48" class="text-gray-600 mb-4 mx-auto"></i>
-                            <h2 class="text-xl font-semibold">Đang đợi Host...</h2>
-                            <p class="text-sm text-gray-500 mt-2">Dùng tab "Hỏi đáp" để gửi ý kiến trong lúc chờ đợi.
-                            </p>
+                    <div id="pollTab" class="animate-fade-in">
+                        <div id="pollDisplay"
+                            class="w-full flex flex-col items-center justify-center text-center py-20">
+                            <i data-lucide="hourglass" size="40" class="text-gray-600 mb-6 animate-spin-slow"></i>
+                            <h2 class="text-lg font-bold text-white">Đang chờ Host bắt đầu...</h2>
+                            <p class="text-xs text-gray-500 mt-2 leading-relaxed">Vui lòng giữ kết nối. Các cuộc bình
+                                chọn sẽ xuất hiện tự động tại đây.</p>
                         </div>
                     </div>
 
                     <!-- Q&A Tab -->
-                    <div id="qaTab" class="hidden flex flex-col gap-4 py-2">
-                        <div class="flex flex-col gap-3">
-                            <textarea id="qaInput" placeholder="Nhập câu hỏi hoặc ý kiến của bạn..."
-                                class="w-full bg-white/5 border border-white/10 p-4 rounded-xl focus:outline-none focus:border-primary h-28 text-sm transition-all"></textarea>
-                            <button id="btnSendQA"
-                                class="bg-primary hover:bg-primary/80 py-3 rounded-xl text-sm font-bold transition-all shadow-lg shadow-primary/20">
-                                Gửi ý kiến ẩn danh
-                            </button>
+                    <div id="qaTab" class="hidden animate-fade-in flex flex-col gap-6">
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                            <textarea id="qaInput" placeholder="Bạn muốn đóng góp ý kiến gì?"
+                                class="w-full bg-transparent border-none p-0 focus:ring-0 text-sm placeholder:text-gray-600 resize-none h-24 mb-3"
+                                style="outline: none !important;"></textarea>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[10px] text-gray-500 flex items-center gap-1 italic">
+                                    <i data-lucide="shield" size="10"></i> Danh tính luôn ẩn danh
+                                </span>
+                                <button id="btnSendQA"
+                                    class="bg-primary hover:bg-primary-hover px-6 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-primary/20">
+                                    <i data-lucide="send" size="12"></i> Gửi ý kiến
+                                </button>
+                            </div>
                         </div>
-                        <div id="qaList" class="flex flex-col gap-3 mt-4">
-                            <!-- Questions will go here -->
+                        <div id="qaList" class="flex flex-col gap-4">
+                            <!-- Questions will be rendered here -->
                         </div>
                     </div>
                 </div>
