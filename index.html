@@ -48,8 +48,32 @@
         <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[120px]">
         </div>
 
+        <!-- Hero Image Section -->
+        <div class="relative z-10 w-full max-w-lg mb-8 animate-[fadeIn_0.8s_ease-out_both]">
+            <div class="relative group rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-gray-800/50">
+                <!-- Image scaled and shifted to hide the logo in the bottom-right corner -->
+                <img src="img/hero.png" alt="AnonVote Hero"
+                    class="w-full h-auto object-cover scale-[1.04] origin-top-left transition-transform duration-1000 group-hover:scale-110 opacity-90 group-hover:opacity-100">
+                <!-- Overlay gradient for depth -->
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-primary/10 transition-all duration-700 group-hover:from-gray-900/60">
+                </div>
+                <!-- Glass effect highlights -->
+                <div class="absolute top-4 left-4 flex gap-2">
+                    <div class="h-2 w-2 rounded-full bg-primary/40 blur-[1px]"></div>
+                    <div class="h-2 w-2 rounded-full bg-secondary/40 blur-[1px]"></div>
+                </div>
+            </div>
+            <!-- Floating element for dynamic look -->
+            <div
+                class="absolute -bottom-4 -right-4 bg-primary/20 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-xl animate-bounce hidden md:block">
+                <i data-lucide="shield-check" class="text-primary" size="24"></i>
+            </div>
+        </div>
+
         <!-- Main Content -->
-        <main class="glass-card max-w-lg w-full p-8 text-center relative z-10">
+        <main
+            class="glass-card max-w-lg w-full p-8 text-center relative z-10 hover:shadow-primary/5 transition-all duration-500">
             <h1
                 class="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
                 Hệ thống bình chọn & phát biểu ý kiến ẩn danh
