@@ -113,6 +113,11 @@
     </div>
     </section>
     </main>
+
+    <!-- Copyright Footer -->
+    <footer class="py-4 text-center text-gray-600 text-[10px] uppercase tracking-[0.2em]">
+        &copy; 2026, Phòng martech - Ban Marketing
+    </footer>
     </div>
 
     <!-- Poll Creation Modal -->
@@ -124,6 +129,16 @@
                 <i data-lucide="plus-circle" class="text-primary"></i> Tạo cuộc bình chọn mới
             </h2>
             <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 uppercase mb-2">Loại bình chọn</label>
+                        <select id="pollType"
+                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary outline-none transition-all">
+                            <option value="choice">Lựa chọn duy nhất</option>
+                            <option value="matrix">Ma trận cho điểm (1-5)</option>
+                        </select>
+                    </div>
+                </div>
                 <div>
                     <label class="block text-xs text-gray-400 uppercase mb-2">Câu hỏi</label>
                     <input type="text" id="pollQuestion" placeholder="VD: Bạn thấy buổi workshop hôm nay thế nào?"
@@ -135,10 +150,28 @@
                         class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/80 transition-all">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-400 uppercase mb-2">Các lựa chọn (cách nhau bởi dấu
+                    <label class="block text-xs text-gray-400 uppercase mb-2">Các nhân sự/đối tượng (cách nhau bởi dấu
                         phẩy)</label>
-                    <textarea id="pollOptions" placeholder="VD: Tuyệt vời, Bình thường, Cần cải thiện"
+                    <textarea id="pollOptions" placeholder="VD: Nguyễn Văn A, Trần Thị B"
                         class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary outline-none transition-all h-24"></textarea>
+                </div>
+                <div id="matrixCriteriaContainer" class="hidden">
+                    <label class="block text-xs text-gray-400 uppercase mb-2">Tiêu chí đánh giá (mặc định 4 tiêu
+                        chí)</label>
+                    <div class="space-y-2">
+                        <input type="text"
+                            class="matrix-criterion w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-primary outline-none"
+                            placeholder="Tiêu chí 1" value="Giá trị tinh thần cốt lõi">
+                        <input type="text"
+                            class="matrix-criterion w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-primary outline-none"
+                            placeholder="Tiêu chí 2" value="Tinh thần chủ động & hỗ trợ">
+                        <input type="text"
+                            class="matrix-criterion w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-primary outline-none"
+                            placeholder="Tiêu chí 3" value="Ghi nhận từ đồng đội">
+                        <input type="text"
+                            class="matrix-criterion w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:border-primary outline-none"
+                            placeholder="Tiêu chí 4" value="Tác phong và thái độ">
+                    </div>
                 </div>
                 <div class="flex gap-3 pt-4">
                     <button id="btnCancelPoll"
