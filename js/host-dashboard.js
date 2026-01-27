@@ -75,19 +75,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         resetPollForm();
     });
 
+    // Handle Poll Type Change
+    const pollType = document.getElementById('pollType');
+    const matrixCriteriaContainer = document.getElementById('matrixCriteriaContainer');
+    pollType.addEventListener('change', () => {
+        if (pollType.value === 'matrix') {
+            matrixCriteriaContainer.classList.remove('hidden');
+        } else {
+            matrixCriteriaContainer.classList.add('hidden');
+        }
+    });
+
     function resetPollForm() {
         document.getElementById('pollQuestion').value = '';
         document.getElementById('pollOptions').value = '';
         document.getElementById('pollImage').value = '';
+        document.getElementById('pollType').value = 'choice';
+        matrixCriteriaContainer.classList.add('hidden');
     }
 
     btnSavePoll.addEventListener('click', async () => {
         const question = document.getElementById('pollQuestion').value.trim();
         const optionsRaw = document.getElementById('pollOptions').value.trim();
+        const type = document.getElementById('pollType').value;
         const imageFile = document.getElementById('pollImage').files[0];
 
         if (!question || !optionsRaw) {
-            alert('Vui lòng nhập đầy đủ câu hỏi và các lựa chọn!');
+            alert('Vui lòng nhập đầy đủ câu hỏi và danh sách đối tượng!');
             return;
         }
 
@@ -115,12 +129,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             label: label.trim()
         }));
 
+        let criteria = [];
+        if (type === 'matrix') {
+            criteria = Array.from(document.querySelectorAll('.matrix-criterion'))
+                .map((input, idx) => ({
+                    id: `tc${idx + 1}`,
+                    label: input.value.trim() || `Tiêu chí ${idx + 1}`
+                }));
+        }
+
         const { error } = await supabase
             .from('polls')
             .insert([{
                 room_id: roomId,
                 question: question,
                 options: options,
+                type: type,
+                criteria: criteria,
                 image_url: imageUrl,
                 status: 'active'
             }]);
@@ -163,6 +188,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             poll.options.forEach(opt => voteCounts[opt.id] = 0);
             poll.votes.forEach(v => voteCounts[v.option_id]++);
 
+            if (poll.type === 'matrix') {
+                return renderMatrixResult(poll);
+            }
+
             const optionsHtml = poll.options.map(opt => {
                 const count = voteCounts[opt.id];
                 const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
@@ -180,25 +209,110 @@ document.addEventListener('DOMContentLoaded', async () => {
             }).join('');
 
             return `
-                <div class="bg-white/5 border border-white/5 p-5 rounded-2xl mb-4 hover:border-white/10 transition-all">
-                    <div class="flex justify-between items-start mb-6">
-                        <div>
-                            <h4 class="font-bold text-lg text-white mb-1">${poll.question}</h4>
-                            <p class="text-[10px] text-gray-500 uppercase tracking-widest">Tổng: ${totalVotes} lượt bình chọn</p>
+                <div class="bg-white/5 border border-white/5 p-5 rounded-2xl mb-4 hover:border-white/10 transition-all overflow-hidden relative">
+                    ${poll.status === 'closed' ? '<div class="absolute inset-0 bg-gray-900/40 z-0 pointer-events-none"></div>' : ''}
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h4 class="font-bold text-lg text-white mb-1">${poll.question}</h4>
+                                <p class="text-[10px] text-gray-500 uppercase tracking-widest">Tổng: ${totalVotes} lượt bình chọn</p>
+                            </div>
+                            <span class="px-2 py-1 rounded-lg text-[9px] uppercase font-black tracking-tighter ${poll.status === 'active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
+                                ${poll.status === 'active' ? 'Đang mở' : 'Đã đóng'}
+                            </span>
                         </div>
-                        <span class="px-2 py-1 rounded-lg text-[9px] uppercase font-black tracking-tighter ${poll.status === 'active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
-                            ${poll.status === 'active' ? 'Đang mở' : 'Đã đóng'}
-                        </span>
-                    </div>
-                    <div>${optionsHtml}</div>
-                    <div class="mt-6 pt-4 border-t border-white/5 flex gap-2">
-                        <button onclick="togglePoll('${poll.id}', '${poll.status}')" class="text-[10px] bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 transition-all font-semibold">
-                            ${poll.status === 'active' ? 'Đóng cuộc bình chọn' : 'Mở lại'}
-                        </button>
+                        <div class="${poll.type === 'matrix' ? 'overflow-x-auto' : ''}">${optionsHtml}</div>
+                        <div class="mt-6 pt-4 border-t border-white/5 flex gap-2">
+                            <button onclick="togglePoll('${poll.id}', '${poll.status}')" class="text-[10px] bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 transition-all font-semibold">
+                                ${poll.status === 'active' ? 'Đóng cuộc bình chọn' : 'Mở lại'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
         }).join('');
+    }
+
+    function renderMatrixResult(poll) {
+        const totalVotes = poll.votes.length;
+        const criteria = poll.criteria || [];
+        const candidates = poll.options || [];
+
+        // Matrix structure: results[candidateId][criterionId] = sum
+        const results = {};
+        candidates.forEach(cand => {
+            results[cand.id] = { total: 0, criteria: {} };
+            criteria.forEach(crit => results[cand.id].criteria[crit.id] = 0);
+        });
+
+        poll.votes.forEach(vote => {
+            const ms = vote.matrix_scores || {};
+            Object.keys(ms).forEach(candId => {
+                if (results[candId]) {
+                    Object.keys(ms[candId]).forEach(critId => {
+                        const score = ms[candId][critId] || 0;
+                        results[candId].criteria[critId] += score;
+                        results[candId].total += score;
+                    });
+                }
+            });
+        });
+
+        // Sorting Logic: Total Score DESC, then TC3 (Criterion 3) DESC
+        const sortedCandidates = candidates.map(cand => ({
+            ...cand,
+            total: results[cand.id].total,
+            tc3: results[cand.id].criteria['tc3'] || 0
+        })).sort((a, b) => {
+            if (b.total !== a.total) return b.total - a.total;
+            return b.tc3 - a.tc3;
+        });
+
+        const tableRows = sortedCandidates.map((cand, index) => {
+            const isWinner = index === 0 && totalVotes > 0;
+            const cellsHtml = criteria.map(crit => `
+                <td class="px-2 py-3 text-center border-l border-white/5 font-mono text-xs">
+                    ${results[cand.id].criteria[crit.id] || 0}
+                </td>
+            `).join('');
+
+            return `
+                <tr class="${isWinner ? 'bg-primary/10 border-l-4 border-l-primary' : 'bg-white/5 border-l-4 border-l-transparent'} border-b border-white/5">
+                    <td class="px-4 py-3 text-sm font-medium text-white flex items-center gap-2">
+                        ${isWinner ? '<i data-lucide="trophy" size="14" class="text-yellow-500"></i>' : ''}
+                        ${cand.label}
+                    </td>
+                    ${cellsHtml}
+                    <td class="px-4 py-3 text-center border-l border-white/5 text-primary font-bold">
+                        ${cand.total}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        const headerHtml = criteria.map(crit => `
+            <th class="px-2 py-3 text-[10px] uppercase text-gray-400 border-l border-white/5 font-medium">${crit.label}</th>
+        `).join('');
+
+        return `
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-white/5">
+                        <th class="px-4 py-3 text-[10px] uppercase text-gray-400 font-medium">Nhân sự</th>
+                        ${headerHtml}
+                        <th class="px-4 py-3 text-[10px] uppercase text-primary border-l border-white/5 font-bold">Tổng điểm</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+            ${totalVotes > 0 ? `
+                <div class="mt-4 p-3 bg-white/5 rounded-xl border border-white/5 text-[10px] text-gray-500 italic">
+                    * Quy tắc: Tổng điểm cao nhất là người được vinh danh. Nếu bằng điểm, ưu tiên nhân sự có điểm <strong>${criteria[2]?.label || 'Tiêu chí 3'}</strong> cao hơn.
+                </div>
+            ` : ''}
+        `;
     }
 
     window.togglePoll = async (id, currentStatus) => {
@@ -348,21 +462,60 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = [];
             polls.forEach(poll => {
                 const totalVotes = poll.votes.length;
-                const voteCounts = {};
-                poll.options.forEach(opt => voteCounts[opt.id] = 0);
-                poll.votes.forEach(v => voteCounts[v.option_id]++);
 
-                poll.options.forEach(opt => {
-                    const count = voteCounts[opt.id];
-                    const percent = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(2) : 0;
-                    data.push({
-                        "Câu hỏi": poll.question,
-                        "Lựa chọn": opt.label,
-                        "Số phiếu": count,
-                        "Tỷ lệ %": percent + "%",
-                        "Trạng thái": poll.status === 'active' ? 'Đang mở' : 'Đã đóng'
+                if (poll.type === 'matrix') {
+                    const criteria = poll.criteria || [];
+                    const candidates = poll.options || [];
+                    const results = {};
+                    candidates.forEach(cand => {
+                        results[cand.id] = { total: 0, criteria: {} };
+                        criteria.forEach(crit => results[cand.id].criteria[crit.id] = 0);
                     });
-                });
+
+                    poll.votes.forEach(vote => {
+                        const ms = vote.matrix_scores || {};
+                        Object.keys(ms).forEach(candId => {
+                            if (results[candId]) {
+                                Object.keys(ms[candId]).forEach(critId => {
+                                    const score = ms[candId][critId] || 0;
+                                    results[candId].criteria[critId] += score;
+                                    results[candId].total += score;
+                                });
+                            }
+                        });
+                    });
+
+                    candidates.forEach(cand => {
+                        const row = {
+                            "Câu hỏi": poll.question,
+                            "Đối tượng (Nhân sự)": cand.label,
+                            "Loại": "Ma trận điểm",
+                            "Trạng thái": poll.status === 'active' ? 'Đang mở' : 'Đã đóng'
+                        };
+                        criteria.forEach(crit => {
+                            row[crit.label] = results[cand.id].criteria[crit.id] || 0;
+                        });
+                        row["TỔNG ĐIỂM"] = results[cand.id].total;
+                        data.push(row);
+                    });
+                } else {
+                    const voteCounts = {};
+                    poll.options.forEach(opt => voteCounts[opt.id] = 0);
+                    poll.votes.forEach(v => voteCounts[v.option_id]++);
+
+                    poll.options.forEach(opt => {
+                        const count = voteCounts[opt.id];
+                        const percent = totalVotes > 0 ? ((count / totalVotes) * 100).toFixed(2) : 0;
+                        data.push({
+                            "Câu hỏi": poll.question,
+                            "Lựa chọn": opt.label,
+                            "Số phiếu": count,
+                            "Tỷ lệ %": percent + "%",
+                            "Loại": "Lựa chọn duy nhất",
+                            "Trạng thái": poll.status === 'active' ? 'Đang mở' : 'Đã đóng'
+                        });
+                    });
+                }
                 // Add empty row between polls
                 data.push({});
             });

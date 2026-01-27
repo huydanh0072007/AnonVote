@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (hasVoted) {
             pollDisplay.innerHTML = `
-                <i data-lucide="check-circle" size="48" class="text-green-500 mb-4"></i>
+                <i data-lucide="check-circle" size="48" class="text-green-500 mb-4 mx-auto"></i>
                 <h2 class="text-xl font-semibold">Cảm ơn bạn đã bình chọn!</h2>
                 <p class="text-sm text-gray-500 mt-2">Đang chờ sự kiện tiếp theo từ Host...</p>
             `;
@@ -163,22 +163,101 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const optionsHtml = poll.options.map(opt => `
-            <button onclick="submitVote('${poll.id}', '${opt.id}')" 
-                    class="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-left hover:bg-primary/20 hover:border-primary/50 transition-all font-medium">
-                ${opt.label}
-            </button>
-        `).join('');
+        if (poll.type === 'matrix') {
+            renderMatrixPoll(poll);
+        } else {
+            const optionsHtml = poll.options.map(opt => `
+                <button onclick="submitVote('${poll.id}', '${opt.id}')" 
+                        class="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-left hover:bg-primary/20 hover:border-primary/50 transition-all font-medium">
+                    ${opt.label}
+                </button>
+            `).join('');
+
+            pollDisplay.innerHTML = `
+                <div class="w-full animate-[fadeIn_0.5s_ease-out]">
+                    ${poll.image_url ? `<img src="${poll.image_url}" class="w-full h-40 object-cover rounded-2xl mb-6 border border-white/10 shadow-lg">` : ''}
+                    <h2 class="text-xl font-bold mb-6">${poll.question}</h2>
+                    <div class="flex flex-col gap-3">
+                        ${optionsHtml}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function renderMatrixPoll(poll) {
+        const criteria = poll.criteria || [];
+        const candidates = poll.options || [];
+
+        let rowsHtml = candidates.map(cand => {
+            let cellsHtml = criteria.map(crit => `
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] text-gray-500">${crit.label}</span>
+                    <select data-candidate="${cand.id}" data-criterion="${crit.id}" 
+                            class="matrix-score bg-gray-800 border border-white/10 rounded-lg p-1 text-xs focus:ring-1 focus:ring-primary outline-none">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5" selected>5</option>
+                    </select>
+                </div>
+            `).join('');
+
+            return `
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5 mb-4">
+                    <h3 class="text-sm font-bold mb-3 text-primary">${cand.label}</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        ${cellsHtml}
+                    </div>
+                </div>
+            `;
+        }).join('');
 
         pollDisplay.innerHTML = `
-            <div class="w-full animate-[fadeIn_0.5s_ease-out]">
-                ${poll.image_url ? `<img src="${poll.image_url}" class="w-full h-40 object-cover rounded-2xl mb-6 border border-white/10 shadow-lg">` : ''}
-                <h2 class="text-xl font-bold mb-6">${poll.question}</h2>
-                <div class="flex flex-col gap-3">
-                    ${optionsHtml}
+            <div class="w-full animate-[fadeIn_0.5s_ease-out] text-left">
+                ${poll.image_url ? `<img src="${poll.image_url}" class="w-full h-32 object-cover rounded-2xl mb-4 border border-white/10">` : ''}
+                <h2 class="text-lg font-bold mb-2">${poll.question}</h2>
+                <p class="text-xs text-gray-400 mb-6 italic">* Chấm điểm từ 1 (Thấp nhất) đến 5 (Tốt nhất)</p>
+                <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                    ${rowsHtml}
                 </div>
+                <button onclick="submitMatrixVote('${poll.id}')" 
+                        class="w-full bg-primary hover:bg-primary/80 text-white py-4 rounded-xl font-bold mt-6 shadow-lg transition-all">
+                    Gửi kết quả đánh giá
+                </button>
             </div>
         `;
+    }
+
+    window.submitMatrixVote = async (pollId) => {
+        const scores = Array.from(document.querySelectorAll('.matrix-score')).map(el => ({
+            candidateId: el.dataset.candidate,
+            criterionId: el.dataset.criterion,
+            score: parseInt(el.value)
+        }));
+
+        const matrixScores = {};
+        scores.forEach(s => {
+            if (!matrixScores[s.candidateId]) matrixScores[s.candidateId] = {};
+            matrixScores[s.candidateId][s.criterionId] = s.score;
+        });
+
+        const { error } = await supabase
+            .from('votes')
+            .insert([{
+                poll_id: pollId,
+                option_id: 'matrix', // Placeholder for matrix votes
+                matrix_scores: matrixScores,
+                voter_fingerprint: localStorage.getItem('voter_fingerprint') || generateFingerprint()
+            }]);
+
+        if (error) {
+            alert('Lỗi khi gửi phiếu bầu!');
+        } else {
+            localStorage.setItem(`voted_poll_${pollId}`, 'true');
+            loadActivePoll();
+        }
     }
 
     window.submitVote = async (pollId, optionId) => {
