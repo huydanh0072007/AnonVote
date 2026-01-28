@@ -15,12 +15,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const btnCreateRoom = document.getElementById('btnCreateRoom');
     const btnJoinRoom = document.getElementById('btnJoinRoom');
-    const joinCodeInput = document.getElementById('joinCode');
+    const joinCodeInput = document.getElementById('joinRoomId');
+    const roomNameInput = document.getElementById('roomName');
+    const joinError = document.getElementById('joinError');
 
     // Create Room Logic
     btnCreateRoom.addEventListener('click', async () => {
-        const roomName = prompt('Nhập tên cuộc họp/sự kiện của bạn:');
-        if (!roomName) return;
+        const roomName = roomNameInput.value.trim();
+        const pinType = document.querySelector('input[name="pinType"]:checked').value;
+
+        if (!roomName) {
+            roomNameInput.classList.add('animate-shake', 'border-red-500');
+            setTimeout(() => roomNameInput.classList.remove('animate-shake'), 400);
+            return;
+        }
+        roomNameInput.classList.remove('border-red-500');
+
+        btnCreateRoom.disabled = true;
+        btnCreateRoom.innerHTML = '<i data-lucide="loader-2" class="animate-spin" size="20"></i> Đang tạo...';
+        lucide.createIcons();
 
         // Generate a random HostKey (64 chars) to identify the owner
         const hostKey = generateRandomKey(64);
@@ -36,11 +49,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         host_key: hostKey,
                         short_id: shortId,
                         settings: {
-                            pin_type: "number",
+                            pin_type: pinType,
                             pin_interval: 30,
                             max_voters: 1000,
                             calc_method: "total_participants"
-                        }
+                        },
+                        current_pin: pinType === 'number' ? '0000' : '🍎🍎🍎🍎' // Initial PIN
                     }
                 ])
                 .select();
@@ -49,35 +63,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (data && data[0]) {
                 const newRoom = data[0];
-                // Save HostKey to LocalStorage for this device
                 const hostData = {
                     roomId: newRoom.id,
                     hostKey: hostKey,
                     roomName: newRoom.name
                 };
                 localStorage.setItem(`host_${newRoom.id}`, JSON.stringify(hostData));
-
-                // Clear temporary background if any
-                document.body.style.backgroundImage = '';
-
-                // Redirect to Host Dashboard
-                window.location.href = `host-dashboard.html?id=${newRoom.id}&key=${hostKey}`;
+                window.location.href = `host-dashboard.html?id=${newRoom.id}&key=${hostKey}&new=true`;
             }
         } catch (err) {
             console.error('Error creating room:', err);
             alert('Có lỗi xảy ra khi tạo phòng. Vui lòng thử lại!');
+            btnCreateRoom.disabled = false;
+            btnCreateRoom.innerHTML = 'Khởi tạo phòng <i data-lucide="sparkles" size="20"></i>';
+            lucide.createIcons();
         }
     });
 
     // Join Room Logic
-    btnJoinRoom.addEventListener('click', () => {
-        const roomCode = joinCodeInput.value.trim();
+    const handleJoin = () => {
+        const roomCode = joinCodeInput.value.trim().toUpperCase();
         if (!roomCode) {
-            alert('Vui lòng nhập mã phòng!');
+            joinCodeInput.classList.add('animate-shake', 'border-red-500');
+            setTimeout(() => joinCodeInput.classList.remove('animate-shake'), 400);
             return;
         }
-        // Redirect to Participant View
         window.location.href = `participant.html?id=${roomCode}`;
+    };
+
+    btnJoinRoom.addEventListener('click', handleJoin);
+    joinCodeInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleJoin();
     });
 
     // Helper: Generate Random Key

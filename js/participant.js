@@ -18,6 +18,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pinError = document.getElementById('pinError');
     const pinInputContainer = document.getElementById('pinNumbers'); // Default to numbers for now
 
+    const connStatus = document.getElementById('connStatus');
+
+    // Connectivity Logic
+    window.addEventListener('online', () => {
+        connStatus.classList.add('-translate-y-full');
+    });
+    window.addEventListener('offline', () => {
+        connStatus.classList.remove('-translate-y-full');
+    });
+
     let currentServerPin = '';
     let pinType = 'number';
 
@@ -190,51 +200,65 @@ document.addEventListener('DOMContentLoaded', async () => {
         const candidates = poll.options || [];
 
         let rowsHtml = candidates.map(cand => {
-            let cellsHtml = criteria.map(crit => `
-                <div class="flex flex-col items-center gap-1">
-                    <span class="text-[8px] text-gray-500">${crit.label}</span>
-                    <select data-candidate="${cand.id}" data-criterion="${crit.id}" 
-                            class="matrix-score bg-gray-800 border border-white/10 rounded-lg p-1 text-xs focus:ring-1 focus:ring-primary outline-none">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5" selected>5</option>
-                    </select>
+            let criteriaHtml = criteria.map(crit => `
+                <div class="mb-4">
+                    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-2">${crit.label}</p>
+                    <div class="flex justify-between gap-1">
+                        ${[1, 2, 3, 4, 5].map(score => `
+                            <button onclick="setMatrixScore(this, '${cand.id}', '${crit.id}', ${score})" 
+                                    class="rating-btn flex-1 py-2 bg-white/5 border border-white/5 rounded-lg text-sm font-bold text-gray-500 hover:bg-white/10 ${score === 5 ? 'active' : ''}"
+                                    data-cand="${cand.id}" data-crit="${crit.id}" data-score="${score}">
+                                ${score}
+                            </button>
+                        `).join('')}
+                    </div>
                 </div>
             `).join('');
 
             return `
-                <div class="bg-white/5 p-4 rounded-xl border border-white/5 mb-4">
-                    <h3 class="text-sm font-bold mb-3 text-primary">${cand.label}</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        ${cellsHtml}
-                    </div>
+                <div class="bg-white/3 p-5 rounded-2xl border border-white/5 mb-6 backdrop-blur-sm">
+                    <h3 class="text-sm font-black mb-4 text-primary flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                        ${cand.label}
+                    </h3>
+                    ${criteriaHtml}
                 </div>
             `;
         }).join('');
 
         pollDisplay.innerHTML = `
-            <div class="w-full animate-[fadeIn_0.5s_ease-out] text-left">
-                ${poll.image_url ? `<img src="${poll.image_url}" class="w-full h-32 object-cover rounded-2xl mb-4 border border-white/10">` : ''}
-                <h2 class="text-lg font-bold mb-2">${poll.question}</h2>
-                <p class="text-xs text-gray-400 mb-6 italic">* Chấm điểm từ 1 (Thấp nhất) đến 5 (Tốt nhất)</p>
-                <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+            <div class="w-full animate-fade-in text-left">
+                ${poll.image_url ? `<img src="${poll.image_url}" class="w-full h-32 object-cover rounded-2xl mb-4 border border-white/10 shadow-lg">` : ''}
+                <div class="mb-6">
+                    <h2 class="text-lg font-black text-white leading-tight">${poll.question}</h2>
+                    <p class="text-[10px] text-gray-500 mt-2 flex items-center gap-1">
+                        <i data-lucide="info" size="10"></i> Chạm vào số để chấm điểm (1-5)
+                    </p>
+                </div>
+                <div class="space-y-2">
                     ${rowsHtml}
                 </div>
                 <button onclick="submitMatrixVote('${poll.id}')" 
-                        class="w-full bg-primary hover:bg-primary/80 text-white py-4 rounded-xl font-bold mt-6 shadow-lg transition-all">
-                    Gửi kết quả đánh giá
+                        class="w-full bg-primary hover:bg-primary-hover text-white py-4 rounded-2xl font-bold mt-6 shadow-xl shadow-primary/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <i data-lucide="send" size="18"></i> Gửi kết quả đánh giá
                 </button>
             </div>
         `;
+        lucide.createIcons();
+    }
+
+    window.setMatrixScore = (btn, candId, critId, score) => {
+        // Unset previous active in this group
+        const group = document.querySelectorAll(`button[data-cand="${candId}"][data-crit="${critId}"]`);
+        group.forEach(b => b.classList.remove('active', 'bg-primary', 'text-white'));
+        btn.classList.add('active');
     }
 
     window.submitMatrixVote = async (pollId) => {
-        const scores = Array.from(document.querySelectorAll('.matrix-score')).map(el => ({
-            candidateId: el.dataset.candidate,
-            criterionId: el.dataset.criterion,
-            score: parseInt(el.value)
+        const scores = Array.from(document.querySelectorAll('.rating-btn.active')).map(el => ({
+            candidateId: el.dataset.cand,
+            criterionId: el.dataset.crit,
+            score: parseInt(el.dataset.score)
         }));
 
         const matrixScores = {};
@@ -247,7 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .from('votes')
             .insert([{
                 poll_id: pollId,
-                option_id: 'matrix', // Placeholder for matrix votes
+                option_id: 'matrix',
                 matrix_scores: matrixScores,
                 voter_fingerprint: localStorage.getItem('voter_fingerprint') || generateFingerprint()
             }]);
@@ -256,6 +280,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('Lỗi khi gửi phiếu bầu!');
         } else {
             localStorage.setItem(`voted_poll_${pollId}`, 'true');
+            // Trigger confetti
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#6366f1', '#a855f7', '#ffffff']
+            });
             loadActivePoll();
         }
     }

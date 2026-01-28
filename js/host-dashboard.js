@@ -64,6 +64,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnCancelPoll = document.getElementById('btnCancelPoll');
     const btnSavePoll = document.getElementById('btnSavePoll');
 
+    // Tag Input Logic
+    const tagContainer = document.getElementById('tagContainer');
+    const tagInput = document.getElementById('tagInput');
+    let tags = [];
+
+    function renderTags() {
+        // Keep input at the end
+        const existingTags = tagContainer.querySelectorAll('.tag-item');
+        existingTags.forEach(t => t.remove());
+
+        tags.forEach((tag, index) => {
+            const tagEl = document.createElement('div');
+            tagEl.className = 'tag-item animate-fade-in';
+            tagEl.innerHTML = `
+                ${tag}
+                <button onclick="removeTag(${index})"><i data-lucide="x" size="12"></i></button>
+            `;
+            tagContainer.insertBefore(tagEl, tagInput);
+        });
+        lucide.createIcons();
+    }
+
+    window.removeTag = (index) => {
+        tags.splice(index, 1);
+        renderTags();
+    };
+
+    tagInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            const val = tagInput.value.trim().replace(',', '');
+            if (val && !tags.includes(val)) {
+                tags.push(val);
+                tagInput.value = '';
+                renderTags();
+            }
+        }
+    });
+
     btnAddPoll.addEventListener('click', () => {
         modalPoll.classList.remove('hidden');
     });
@@ -86,7 +125,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function resetPollForm() {
         document.getElementById('pollQuestion').value = '';
-        document.getElementById('pollOptions').value = '';
+        tagInput.value = '';
+        tags = [];
+        renderTags();
         document.getElementById('pollImage').value = '';
         document.getElementById('pollType').value = 'choice';
         matrixCriteriaContainer.classList.add('hidden');
@@ -94,11 +135,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnSavePoll.addEventListener('click', async () => {
         const question = document.getElementById('pollQuestion').value.trim();
-        const optionsRaw = document.getElementById('pollOptions').value.trim();
         const type = document.getElementById('pollType').value;
         const imageFile = document.getElementById('pollImage').files[0];
 
-        if (!question || !optionsRaw) {
+        if (!question || tags.length === 0) {
             alert('Vui lòng nhập đầy đủ câu hỏi và danh sách đối tượng!');
             return;
         }
@@ -122,7 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        const options = optionsRaw.split(',').map((label, index) => ({
+        const options = tags.map((label, index) => ({
             id: (index + 1).toString(),
             label: label.trim()
         }));
@@ -160,6 +200,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // Auto-share Flow for New Rooms
+    if (urlParams.get('new') === 'true') {
+        setTimeout(() => {
+            const btnShare = document.getElementById('btnShare');
+            if (btnShare) btnShare.click();
+        }, 1000);
+    }
+
     async function loadPolls() {
         const { data: polls } = await supabase
             .from('polls')
@@ -193,14 +241,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const optionsHtml = poll.options.map(opt => {
                 const count = voteCounts[opt.id];
                 const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                const optionVotes = poll.votes.filter(v => v.option_id === opt.id).length;
+                const percentage = totalVotes > 0 ? (optionVotes / totalVotes * 100).toFixed(1) : 0;
+
                 return `
                     <div class="mb-4">
                         <div class="flex justify-between text-xs mb-1">
-                            <span>${opt.label}</span>
-                            <span class="font-bold text-primary">${count} phiếu (${percent}%)</span>
+                            <span class="text-gray-300">${opt.label}</span>
+                            <span class="text-primary font-bold">${optionVotes} phiếu (${percentage}%)</span>
                         </div>
-                        <div class="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
-                            <div class="bg-gradient-to-r from-primary to-secondary h-full transition-all duration-1000 ease-out" style="width: ${percent}%"></div>
+                        <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                            <div class="h-full bg-primary shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all duration-1000" style="width: ${percentage}%"></div>
                         </div>
                     </div>
                 `;
