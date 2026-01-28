@@ -210,10 +210,14 @@
                         class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/80 transition-all">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-400 uppercase mb-2">Các nhân sự/đối tượng (cách nhau bởi dấu
-                        phẩy)</label>
-                    <textarea id="pollOptions" placeholder="VD: Nguyễn Văn A, Trần Thị B"
-                        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary outline-none transition-all h-24"></textarea>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-gray-500 uppercase font-bold tracking-widest ml-1">Danh sách đối
+                            tượng (Cá nhân/Lựa chọn)</label>
+                        <div id="tagContainer" class="tag-container focus-within:border-primary transition-all">
+                            <input type="text" id="tagInput" placeholder="Nhập tên và nhấn Enter..." class="tag-input">
+                        </div>
+                        <p class="text-[9px] text-gray-600 italic">* Các tên sẽ được hiển thị trong bảng bình chọn.</p>
+                    </div>
                 </div>
                 <div id="matrixCriteriaContainer" class="hidden">
                     <label class="block text-xs text-gray-400 uppercase mb-2">Tiêu chí đánh giá (mặc định 4 tiêu
