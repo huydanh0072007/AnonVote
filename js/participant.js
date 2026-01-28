@@ -417,16 +417,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    const debouncedLoadPoll = debounce(loadActivePoll, 200);
+    const debouncedLoadQA = debounce(loadQA, 200);
+
     // Subscribe to changes
     supabase.channel(`polls_${actualRoomId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `room_id=eq.${actualRoomId}` }, () => {
-            loadActivePoll();
+            debouncedLoadPoll();
         })
         .subscribe();
 
     supabase.channel(`qa_${actualRoomId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: `room_id=eq.${actualRoomId}` }, () => {
-            loadQA();
+            debouncedLoadQA();
         })
         .subscribe();
 

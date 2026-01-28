@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const roomTitle = document.getElementById('roomTitle');
-    const displayPin = document.getElementById('roomPin');
+    const displayRoomId = document.getElementById('displayRoomId');
+    const displayPin = document.getElementById('displayPin');
     const statOnline = document.getElementById('participantCount');
     const statVoted = document.getElementById('totalVotesCount');
 
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     roomTitle.innerText = room.name;
     const activeShortId = room.short_id || roomId;
+    if (displayRoomId) displayRoomId.innerText = activeShortId;
 
     // 2. PIN Rotation Logic
     let currentPin = '';
@@ -200,13 +202,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Auto-share Flow for New Rooms
-    if (urlParams.get('new') === 'true') {
-        setTimeout(() => {
-            const btnShare = document.getElementById('btnShare');
-            if (btnShare) btnShare.click();
-        }, 1000);
+    // 6. Poll Management
+
+    // Debounce function to prevent refetch storms
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
     }
+
+    const debouncedLoadPolls = debounce(loadPolls, 200);
+    const debouncedLoadQA = debounce(loadQA, 200);
 
     async function loadPolls() {
         const { data: polls } = await supabase
@@ -444,11 +452,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadQA();
 
     // Update real-time listeners to include Questions
-    supabase.channel('room_updates')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `room_id=eq.${roomId}` }, () => loadPolls())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, () => loadPolls())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: `room_id=eq.${roomId}` }, () => loadQA())
-        .subscribe();
+    // Update real-time listeners for better performance
+    const roomUpdates = supabase.channel('room_updates')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `room_id=eq.${roomId}` }, () => debouncedLoadPolls())
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votes' }, (payload) => {
+            // Since we can't filter votes by room_id directly in postgres_changes (without room_id column),
+            // we'll just trigger a debounced load and let the 200ms window catch multiple votes.
+            debouncedLoadPolls();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: `room_id=eq.${roomId}` }, () => debouncedLoadQA())
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') console.log('Realtime: Subscribed to room updates');
+            if (status === 'CHANNEL_ERROR') {
+                console.error('Realtime: Channel error, attempting to reconnect...');
+                setTimeout(() => roomUpdates.subscribe(), 3000);
+            }
+        });
 
     // 4. Presence (Online Users)
     const roomChannel = supabase.channel(`room:${roomId}`);
