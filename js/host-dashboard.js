@@ -474,15 +474,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Update real-time listeners to include Questions
     // Update real-time listeners for better performance
-    const roomUpdates = supabase.channel('room_updates')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `room_id=eq.${roomId}` }, () => debouncedLoadPolls())
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votes' }, (payload) => {
-            // Since we can't filter votes by room_id directly in postgres_changes (without room_id column),
-            // we'll just trigger a debounced load and let the 200ms window catch multiple votes.
+    const roomUpdates = supabase.channel(`host_updates_${roomId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `room_id=eq.${roomId}` }, (payload) => {
+            console.log('Realtime Poll Update:', payload);
             debouncedLoadPolls();
         })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: `room_id=eq.${roomId}` }, () => debouncedLoadQA())
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'votes' }, (payload) => {
+            console.log('Realtime Vote Update:', payload);
+            debouncedLoadPolls();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: `room_id=eq.${roomId}` }, (payload) => {
+            console.log('Realtime Q&A Update:', payload);
+            debouncedLoadQA();
+        })
         .subscribe((status) => {
+            console.log('Realtime Status:', status);
             if (status === 'CHANNEL_ERROR') {
                 setTimeout(() => roomUpdates.subscribe(), 3000);
             }

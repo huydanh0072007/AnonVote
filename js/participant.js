@@ -443,17 +443,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const debouncedLoadQA = debounce(loadQA, 200);
 
     // Subscribe to changes
-    supabase.channel(`polls_${actualRoomId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `room_id=eq.${actualRoomId}` }, () => {
+    const participantUpdates = supabase.channel(`participant_updates_${actualRoomId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'polls', filter: `room_id=eq.${actualRoomId}` }, (payload) => {
+            console.log('Realtime Poll Update (Participant):', payload);
             debouncedLoadPoll();
         })
-        .subscribe();
-
-    supabase.channel(`qa_${actualRoomId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: `room_id=eq.${actualRoomId}` }, () => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: `room_id=eq.${actualRoomId}` }, (payload) => {
+            console.log('Realtime QA Update (Participant):', payload);
             debouncedLoadQA();
         })
-        .subscribe();
+        .subscribe((status) => {
+            console.log('Realtime Status (Participant):', status);
+            if (status === 'CHANNEL_ERROR') {
+                setTimeout(() => participantUpdates.subscribe(), 3000);
+            }
+        });
 
     // Initial load
     loadActivePoll();
