@@ -71,8 +71,8 @@
                         <p class="text-xs text-gray-400 mt-1">Quản lý và theo dõi kết quả</p>
                     </div>
                     <button id="btnAddPoll"
-                        class="bg-primary hover:bg-primary-hover text-white p-3 rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-105">
-                        <i data-lucide="plus"></i>
+                        class="bg-primary hover:bg-primary-hover text-white h-10 w-10 rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 flex items-center justify-center">
+                        <i data-lucide="plus" size="20"></i>
                     </button>
                 </div>
                 <div id="pollList" class="space-y-4">
@@ -87,18 +87,16 @@
             <div id="panelRight" class="split-right p-6 no-scrollbar">
                 <!-- Layout Presets Control Bar -->
                 <div class="glass-card mb-6 p-2 flex justify-between items-center bg-white/5 backdrop-blur-md">
-                    <div class="flex gap-1 ml-2">
-                        <span class="text-[10px] text-gray-500 uppercase font-semibold tracking-wider mr-2">Chế độ hiển
-                            thị:</span>
-                        <button onclick="setLayoutPreset('focus')"
-                            class="preset-btn px-3 py-1 rounded-lg text-[10px] bg-white/5 text-gray-400 hover:text-white transition-colors">Tập
-                            trung</button>
-                        <button onclick="setLayoutPreset('moderate')"
-                            class="preset-btn px-3 py-1 rounded-lg text-[10px] bg-primary/20 text-primary font-bold">Cân
-                            bằng</button>
-                        <button onclick="setLayoutPreset('analytic')"
-                            class="preset-btn px-3 py-1 rounded-lg text-[10px] bg-white/5 text-gray-400 hover:text-white transition-colors">Phân
-                            tích</button>
+                    <div class="flex flex-wrap gap-2 items-center ml-2">
+                        <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest mr-1">Chế độ hiển thị:</span>
+                        <div class="flex bg-black/20 p-1 rounded-xl border border-white/5">
+                            <button onclick="setLayoutPreset('focus')"
+                                class="preset-btn px-4 py-1.5 rounded-lg text-xs bg-white/5 text-gray-400 hover:text-white transition-all">Tập trung</button>
+                            <button onclick="setLayoutPreset('moderate')"
+                                class="preset-btn px-4 py-1.5 rounded-lg text-xs bg-primary text-white font-bold shadow-lg">Cân bằng</button>
+                            <button onclick="setLayoutPreset('analytic')"
+                                class="preset-btn px-4 py-1.5 rounded-lg text-xs bg-white/5 text-gray-400 hover:text-white transition-all">Phân tích</button>
+                        </div>
                     </div>
                     <div class="flex gap-2">
                         <button id="btnExportExcel"
@@ -253,8 +251,15 @@
         class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="glass-card w-full max-w-sm p-6 text-center animate-in fade-in zoom-in-95">
             <h2 class="text-xl font-bold mb-4">Mời mọi người tham gia</h2>
-            <div class="bg-white p-4 rounded-2xl mb-6 inline-block">
+            <div class="bg-white p-4 rounded-2xl mb-4 inline-block shadow-xl">
                 <img id="qrCode" src="" alt="QR Code" class="w-48 h-48">
+            </div>
+            
+            <div class="mb-6">
+                <p class="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Mã PIN tham gia</p>
+                <div id="sharePinDisplay" class="text-4xl font-black text-primary tracking-[0.5em] font-mono bg-white/5 py-3 rounded-2xl border border-white/5">
+                    ----
+                </div>
             </div>
             <div class="space-y-4">
                 <div class="bg-white/5 p-3 rounded-xl border border-white/10 flex items-center gap-2">
@@ -272,11 +277,14 @@
         </div>
     </div>
 
+    <!-- Shared Utilities -->
+    <script src="js/utils.js?v=2"></script>
+
     <!-- Supabase SDK CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <script src="js/supabase-config.js"></script>
-    <script src="js/host-dashboard.js"></script>
+    <script src="js/supabase-config.js?v=2"></script>
+    <script src="js/host-dashboard.js?v=2"></script>
     <script>lucide.createIcons();</script>
 </body>
 

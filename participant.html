@@ -62,9 +62,11 @@
                         <button data-icon="🎁"
                             class="icon-btn text-2xl p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10">🎁</button>
                     </div>
-                    <div id="selectedIcons"
-                        class="h-12 bg-gray-800/50 rounded-xl flex items-center justify-center gap-4 text-2xl">
-                        <!-- Selected icons will appear here -->
+                    <div id="selectedIcons" class="flex items-center justify-center gap-2 mt-4">
+                        <div class="pin-slot" data-slot="0"></div>
+                        <div class="pin-slot" data-slot="1"></div>
+                        <div class="pin-slot" data-slot="2"></div>
+                        <div class="pin-slot" data-slot="3"></div>
                     </div>
                 </div>
 
@@ -160,10 +162,11 @@
     <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]"></div>
 
     <!-- Scripts -->
+    <script src="js/utils.js?v=2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js"></script>
-    <script src="js/participant.js"></script>
+    <script src="js/supabase-config.js?v=2"></script>
+    <script src="js/participant.js?v=2"></script>
     <script>lucide.createIcons();</script>
 </body>
 
