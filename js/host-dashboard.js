@@ -36,14 +36,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 2. PIN Rotation Logic
     let currentPin = '';
+    const pinType = room.settings.pin_type || 'number';
+    const roomPinDisplay = document.getElementById('roomPin');
 
     function generatePin() {
-        return Math.floor(1000 + Math.random() * 9000).toString();
+        if (pinType === 'number') {
+            return Math.floor(1000 + Math.random() * 9000).toString();
+        } else {
+            const icons = ['🍎', '⭐', '🚀', '💎', '🍀', '🔥', '🌈', '🎁'];
+            let result = '';
+            for (let i = 0; i < 4; i++) {
+                result += icons[Math.floor(Math.random() * icons.length)];
+            }
+            return result;
+        }
     }
 
     async function rotatePin() {
         currentPin = generatePin();
-        displayPin.innerText = currentPin;
+        if (displayPin) displayPin.innerText = currentPin;
+        if (roomPinDisplay) roomPinDisplay.innerText = currentPin;
+        
+        // Update to Share Modal
+        const sharePinDisplay = document.getElementById('sharePinDisplay');
+        if (sharePinDisplay) sharePinDisplay.innerText = currentPin;
 
         // Update to Supabase
         await supabase
@@ -58,6 +74,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Rotate based on settings
     const interval = (room.settings.pin_interval || 30) * 1000;
     setInterval(rotatePin, interval);
+
+    const btnRotatePin = document.getElementById('btnRotatePin');
+    if (btnRotatePin) {
+        btnRotatePin.addEventListener('click', rotatePin);
+    }
 
     // 6. Poll Management
     const btnAddPoll = document.getElementById('btnAddPoll');
@@ -80,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tagEl = document.createElement('div');
             tagEl.className = 'tag-item animate-fade-in';
             tagEl.innerHTML = `
-                ${tag}
+                ${escapeHTML(tag)}
                 <button onclick="removeTag(${index})"><i data-lucide="x" size="12"></i></button>
             `;
             tagContainer.insertBefore(tagEl, tagInput);
@@ -255,7 +276,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return `
                     <div class="mb-4">
                         <div class="flex justify-between text-xs mb-1">
-                            <span class="text-gray-300">${opt.label}</span>
+                            <span class="text-gray-300">${escapeHTML(opt.label)}</span>
                             <span class="text-primary font-bold">${optionVotes} phiếu (${percentage}%)</span>
                         </div>
                         <div class="h-2 bg-white/5 rounded-full overflow-hidden">
@@ -271,7 +292,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="relative z-10">
                         <div class="flex justify-between items-start mb-6">
                             <div>
-                                <h4 class="font-bold text-lg text-white mb-1">${poll.question}</h4>
+                                <h4 class="font-bold text-lg text-white mb-1">${escapeHTML(poll.question)}</h4>
                                 <p class="text-[10px] text-gray-500 uppercase tracking-widest">Tổng: ${totalVotes} lượt bình chọn</p>
                             </div>
                             <span class="px-2 py-1 rounded-lg text-[9px] uppercase font-black tracking-tighter ${poll.status === 'active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
@@ -337,7 +358,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <tr class="${isWinner ? 'bg-primary/10 border-l-4 border-l-primary' : 'bg-white/5 border-l-4 border-l-transparent'} border-b border-white/5">
                     <td class="px-4 py-3 text-sm font-medium text-white flex items-center gap-2">
                         ${isWinner ? '<i data-lucide="trophy" size="14" class="text-yellow-500"></i>' : ''}
-                        ${cand.label}
+                        ${escapeHTML(cand.label)}
                     </td>
                     ${cellsHtml}
                     <td class="px-4 py-3 text-center border-l border-white/5 text-primary font-bold">
@@ -348,7 +369,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).join('');
 
         const headerHtml = criteria.map(crit => `
-            <th class="px-2 py-3 text-[10px] uppercase text-gray-400 border-l border-white/5 font-medium">${crit.label}</th>
+            <th class="px-2 py-3 text-[10px] uppercase text-gray-400 border-l border-white/5 font-medium">${escapeHTML(crit.label)}</th>
         `).join('');
 
         return `
@@ -366,7 +387,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </table>
             ${totalVotes > 0 ? `
                 <div class="mt-4 p-3 bg-white/5 rounded-xl border border-white/5 text-[10px] text-gray-500 italic">
-                    * Quy tắc: Tổng điểm cao nhất là người được vinh danh. Nếu bằng điểm, ưu tiên nhân sự có điểm <strong>${criteria[2]?.label || 'Tiêu chí 3'}</strong> cao hơn.
+                    * Quy tắc: Tổng điểm cao nhất là người được vinh danh. Nếu bằng điểm, ưu tiên nhân sự có điểm <strong>${escapeHTML(criteria[2]?.label || 'Tiêu chí 3')}</strong> cao hơn.
                 </div>
             ` : ''}
         `;
@@ -407,7 +428,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="flex justify-between items-start gap-2">
                     <div class="flex-1">
                         ${q.is_answered ? '<span class="text-[8px] bg-green-500 text-white px-1.5 py-0.5 rounded-full uppercase font-bold mr-2 mb-1 inline-block">Đã trả lời</span>' : ''}
-                        <p class="text-sm ${q.is_toxic ? 'text-red-300 italic' : 'text-gray-200'}">${q.content}</p>
+                        <p class="text-sm ${q.is_toxic ? 'text-red-300 italic' : 'text-gray-200'}">${escapeHTML(q.content)}</p>
                     </div>
                     <div class="flex flex-col items-center min-w-[30px]">
                         <i data-lucide="heart" size="12" class="text-primary" fill="currentColor"></i>
@@ -462,9 +483,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'questions', filter: `room_id=eq.${roomId}` }, () => debouncedLoadQA())
         .subscribe((status) => {
-            if (status === 'SUBSCRIBED') console.log('Realtime: Subscribed to room updates');
             if (status === 'CHANNEL_ERROR') {
-                console.error('Realtime: Channel error, attempting to reconnect...');
                 setTimeout(() => roomUpdates.subscribe(), 3000);
             }
         });
@@ -495,6 +514,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const joinLink = `${window.location.origin}/participant.html?id=${activeShortId}`;
             shareLinkInput.value = joinLink;
             qrCode.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(joinLink)}`;
+            
+            // Populate current PIN to modal
+            const sharePinDisplay = document.getElementById('sharePinDisplay');
+            if (sharePinDisplay) sharePinDisplay.innerText = currentPin;
+            
             modalShare.classList.remove('hidden');
         });
     }
@@ -681,7 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Update button states
         document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.classList.remove('bg-primary/20', 'text-primary', 'font-bold');
+            btn.classList.remove('bg-primary', 'text-white', 'font-bold', 'shadow-lg');
             btn.classList.add('bg-white/5', 'text-gray-400');
         });
 
@@ -690,7 +714,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (activeBtn) {
             activeBtn.classList.remove('bg-white/5', 'text-gray-400');
-            activeBtn.classList.add('bg-primary/20', 'text-primary', 'font-bold');
+            activeBtn.classList.add('bg-primary', 'text-white', 'font-bold', 'shadow-lg');
         }
 
         switch (preset) {

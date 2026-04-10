@@ -1,4 +1,4 @@
-// Participant Logic
+// Participant Logic - v1.0.1-SEC-FIX-RELOADED
 document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('id');
@@ -110,7 +110,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     function renderSelectedIcons() {
-        selectedIconsContainer.innerHTML = voterIcons.join(' ');
+        const slots = document.querySelectorAll('.pin-slot');
+        slots.forEach((slot, i) => {
+            if (voterIcons[i]) {
+                slot.innerText = voterIcons[i];
+                slot.classList.add('filled', 'animate-fade-in');
+            } else {
+                slot.innerText = '';
+                slot.classList.remove('filled', 'animate-fade-in');
+            }
+        });
     }
 
     btnVerifyPin.addEventListener('click', () => {
@@ -165,9 +174,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (hasVoted) {
             pollDisplay.innerHTML = `
-                <i data-lucide="check-circle" size="48" class="text-green-500 mb-4 mx-auto"></i>
-                <h2 class="text-xl font-semibold">Cảm ơn bạn đã bình chọn!</h2>
-                <p class="text-sm text-gray-500 mt-2">Đang chờ sự kiện tiếp theo từ Host...</p>
+                <div class="animate-in fade-in zoom-in duration-500 text-center py-6">
+                    <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="check-circle-2" class="text-primary w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Đã ghi nhận!</h3>
+                    <p class="text-gray-400 text-sm mb-8">Cảm ơn bạn đã tham gia bình chọn cho: <br><span class="text-primary font-semibold">${escapeHTML(poll.question)}</span></p>
+                </div>
             `;
             lucide.createIcons();
             return;
@@ -179,14 +192,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             const optionsHtml = poll.options.map(opt => `
                 <button onclick="submitVote('${poll.id}', '${opt.id}')" 
                         class="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-left hover:bg-primary/20 hover:border-primary/50 transition-all font-medium">
-                    ${opt.label}
+                    ${escapeHTML(opt.label)}
                 </button>
             `).join('');
 
             pollDisplay.innerHTML = `
                 <div class="w-full animate-[fadeIn_0.5s_ease-out]">
                     ${poll.image_url ? `<img src="${poll.image_url}" class="w-full h-40 object-cover rounded-2xl mb-6 border border-white/10 shadow-lg">` : ''}
-                    <h2 class="text-xl font-bold mb-6">${poll.question}</h2>
+                    <h2 class="text-xl font-bold mb-6">${escapeHTML(poll.question)}</h2>
                     <div class="flex flex-col gap-3">
                         ${optionsHtml}
                     </div>
@@ -202,7 +215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let rowsHtml = candidates.map(cand => {
             let criteriaHtml = criteria.map(crit => `
                 <div class="mb-4">
-                    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-2">${crit.label}</p>
+                    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-2">${escapeHTML(crit.label)}</p>
                     <div class="flex justify-between gap-1">
                         ${[1, 2, 3, 4, 5].map(score => `
                             <button onclick="setMatrixScore(this, '${cand.id}', '${crit.id}', ${score})" 
@@ -219,7 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="bg-white/3 p-5 rounded-2xl border border-white/5 mb-6 backdrop-blur-sm">
                     <h3 class="text-sm font-black mb-4 text-primary flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                        ${cand.label}
+                        ${escapeHTML(cand.label)}
                     </h3>
                     ${criteriaHtml}
                 </div>
@@ -230,7 +243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="w-full animate-fade-in text-left">
                 ${poll.image_url ? `<img src="${poll.image_url}" class="w-full h-32 object-cover rounded-2xl mb-4 border border-white/10 shadow-lg">` : ''}
                 <div class="mb-6">
-                    <h2 class="text-lg font-black text-white leading-tight">${poll.question}</h2>
+                    <h2 class="text-lg font-black text-white leading-tight">${escapeHTML(poll.question)}</h2>
                     <p class="text-[10px] text-gray-500 mt-2 flex items-center gap-1">
                         <i data-lucide="info" size="10"></i> Chạm vào số để chấm điểm (1-5)
                     </p>
@@ -397,7 +410,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="bg-white/5 border border-white/5 p-4 rounded-xl flex items-start gap-3 mb-2 ${q.is_answered ? 'opacity-70 bg-green-500/5 border-green-500/10' : ''}">
                 <div class="flex-1">
                     ${q.is_answered ? '<span class="text-[8px] bg-green-500 text-white px-1.5 py-0.5 rounded-full uppercase font-bold mr-2 mb-1 inline-block">Đã trả lời</span>' : ''}
-                    <p class="text-sm ${q.is_answered ? 'text-gray-300' : 'text-white'}">${q.content}</p>
+                    <p class="text-sm ${q.is_answered ? 'text-gray-300' : 'text-white'}">${escapeHTML(q.content)}</p>
                 </div>
                 <button onclick="upvoteQA('${q.id}', ${q.upvotes})" class="flex flex-col items-center gap-1 group">
                     <i data-lucide="heart" size="14" class="${localStorage.getItem(`upvoted_${q.id}`) ? 'text-red-500 fill-red-500' : 'text-gray-500 group-hover:text-red-400'} transition-all"></i>
